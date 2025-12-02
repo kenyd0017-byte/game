@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>鸟的天堂 - 静态描写创作台</title>
+    <style>
+        /* --- 1. 全局设置 --- */
+        :root {
+            --primary: #ff2442; 
+            --accent: #2c3e50;
+            --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            --card-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-image: var(--bg-gradient);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #333;
+        }
+
+        /* --- 2. 主容器 --- */
+        .app-container {
+            width: 98vw;
+            height: 95vh;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- 3. 顶部栏 --- */
+        header {
+            height: 80px;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f0f0;
+            background: #fff;
+        }
+        .brand { font-size: 26px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 15px; }
+        .brand-tag { background: var(--primary); color: #fff; padding: 4px 12px; border-radius: 8px; font-size: 16px; font-weight: normal; }
+        
+        .actions { display: flex; gap: 20px; }
+        .btn { padding: 12px 30px; border-radius: 12px; font-size: 20px; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
+        .btn-ghost { background: #f5f7fa; color: #666; }
+        .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 15px rgba(255, 36, 66, 0.4); }
+        .btn-primary:active { transform: scale(0.95); }
+
+        /* --- 4. 工作区布局 --- */
+        .workspace {
+            flex: 1;
+            display: flex;
+            padding: 30px;
+            gap: 40px;
+            overflow: hidden;
+        }
+
+        /* === 左侧：视觉与引导区 === */
+        .left-panel {
+            flex: 4;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* 图片展示区 */
+        .gallery-container {
+            flex: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #fff;
+            border-radius: 16px;
+        }
+        
+        .main-image {
+            flex: 1;
+            background-color: #eee;
+            border-radius: 16px;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #e0e0e0;
+            position: relative;
+            transition: background-image 0.3s ease;
+        }
+
+        .thumbnail-row {
+            height: 90px;
+            display: flex;
+            gap: 15px;
+        }
+        .thumb {
+            flex: 1;
+            background-color: #f0f0f0;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            background-size: cover;
+            background-position: center;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .thumb:hover { transform: translateY(-3px); }
+        .thumb.active { border-color: var(--primary); }
+        .thumb::after { content: attr(data-label); position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.5); color: white; font-size: 14px; text-align: center; padding: 4px 0; }
+
+        /* 引导卡片容器 */
+        .guide-card {
+            flex: 4;
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* Tab 导航样式 */
+        .guide-tabs {
+            display: flex;
+            background: #f5f5f5;
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #666;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab-item.active {
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 内容显示控制 */
+        .tab-content { display: none; animation: fadeIn 0.3s; height: 100%; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 仿小红书范文卡片 */
+        .xhs-card { background: #fff; height: 100%; display: flex; flex-direction: column; }
+        .xhs-title { font-size: 20px; font-weight: 900; color: #333; margin-bottom: 15px; line-height: 1.4; }
+        .xhs-body { font-size: 18px; color: #444; line-height: 1.7; text-align: justify; flex: 1; overflow-y: auto; }
+        .highlight-text { background: linear-gradient(to bottom, transparent 60%, #fff176 60%); color: #333; font-weight: bold; padding: 0 2px; }
+        .xhs-footer { margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 10px; display: flex; justify-content: space-between; color: #999; font-size: 14px; }
+
+        /* 写作导航 (流程图) */
+        .flow-steps { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .step-box { background: #f9f9f9; padding: 15px 10px; border-radius: 10px; font-size: 18px; font-weight: bold; color: #555; text-align: center; width: 42%; border: 1px solid #eee; }
+        .step-box.highlight { color: var(--primary); border: 1px solid #ffcdd2; background: #fff0f2; }
+        .step-arrow { font-size: 24px; color: #d69e2e; font-weight: bold; }
+        .small-tip { font-size: 16px; color: #856404; text-align: center; padding: 10px; background: #fff3cd; border-radius: 8px; margin-top: 10px; }
+
+        /* === 右侧：创作区 === */
+        .right-panel {
+            flex: 6;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        .editor-header {
+            padding: 20px 30px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            border-radius: 20px 20px 0 0;
+            color: #6b7280;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .text-area-wrapper { flex: 1; position: relative; }
+        textarea {
+            width: 100%; height: 100%; border: none; outline: none; padding: 30px;
+            font-size: 24px; /* 超大字号适配白板 */
+            line-height: 2.0; /* 宽松行距 */
+            color: #374151; resize: none;
+            background-image: linear-gradient(transparent 96%, #e5e7eb 97%);
+            background-size: 100% 48px; /* 行高匹配 */
+            background-attachment: local;
+        }
+        textarea::placeholder { color: #ccc; }
+
+        /* 底部工具栏 */
+        .editor-toolbar {
+            height: 80px;
+            border-top: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            gap: 15px; /* 按钮间距 */
+            background: #fff;
+            border-radius: 0 0 20px 20px;
+        }
+        .tool-btn {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px; border-radius: 30px;
+            border: 2px solid #e5e7eb; background: #fff;
+            color: #555; font-size: 18px; font-weight: bold;
+            cursor: pointer; transition: 0.2s;
+        }
+        .tool-btn:active { transform: scale(0.95); }
+        /* 针对不同按钮的颜色区分 */
+        .tool-btn.btn-vocab { border-color: #4caf50; color: #2e7d32; background: #e8f5e9; }
+        .tool-btn.btn-sent { border-color: #2196f3; color: #1565c0; background: #e3f2fd; }
+        
+        .mic-active { animation: pulse 1.5s infinite; background: var(--primary); color: white; border-color: var(--primary); }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 36, 66, 0.4); } 100% { box-shadow: 0 0 0 15px rgba(255, 36, 66, 0); } }
+
+        /* --- 5. 锦囊弹窗 --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 500;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
+        
+        .modal-card {
+            background: #fff;
+            width: 800px;
+            max-width: 90%;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            padding: 40px;
+            display: flex; flex-direction: column;
+            transform: scale(0.95); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.active .modal-card { transform: scale(1); }
+        
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 30px; align-items: center; }
+        .modal-title { font-size: 28px; font-weight: 800; color: #333; }
+        .close-icon { font-size: 36px; color: #999; cursor: pointer; padding: 10px; }
+        
+        .tag-cloud { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+        .tag {
+            background: #f0fdf4; color: #15803d; border: 2px solid #bbf7d0;
+            padding: 15px 30px; border-radius: 50px; font-size: 24px; font-weight: bold;
+            cursor: pointer; transition: 0.2s;
+        }
+        .tag:active { background: #22c55e; color: white; transform: scale(0.95); }
+        
+        .sentence-list { display: flex; flex-direction: column; gap: 20px; }
+        .sentence-group-title { font-size: 18px; color: #666; font-weight: bold; margin-bottom: -10px; margin-left: 5px; }
+        .sentence {
+            padding: 25px; background: #e3f2fd; border: 2px solid #bbdefb; border-radius: 16px;
+            cursor: pointer; font-size: 22px; line-height: 1.6; color: #0d47a1; position: relative;
+        }
+        .sentence:active { background: #bbdefb; border-color: #2196f3; }
+        .sentence::after { content: "📝 点击使用"; position: absolute; right: 20px; bottom: 10px; font-size: 14px; color: #1976d2; opacity: 0.6; }
+
+        /* --- 6. 成功发布页 --- */
+        .success-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff;
+            z-index: 600; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .success-overlay.active { transform: translateY(0); }
+        .badge { font-size: 80px; margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
+        .comment-wall { width: 700px; margin-top: 40px; background: #f9fafb; border-radius: 20px; padding: 30px; }
+        .comment-item { display: flex; gap: 20px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee; animation: slideUp 0.5s backwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .toast {
+            position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); color: white; padding: 20px 50px;
+            border-radius: 50px; font-size: 24px; pointer-events: none; opacity: 0; transition: 0.3s; z-index: 800;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="brand">
+            <span class="brand-tag">五年级语文</span>
+            鸟的天堂·静态描写
+        </div>
+        <div class="actions">
+            <button class="btn btn-ghost" onclick="resetApp()">重置</button>
+            <button class="btn btn-primary" onclick="handlePublish()">发布笔记</button>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <!-- 左侧：视觉 + 引导 -->
+        <aside class="left-panel">
+            <!-- 1. 多图画廊 -->
+            <div class="gallery-container">
+                <div class="main-image" id="mainImage"></div>
+                <div class="thumbnail-row">
+                    <div class="thumb active" 
+                         onclick="switchImage(this, 'tree_far.jpg')" 
+                         data-label="远景·全貌" 
+                         style="background-image: url('tree_far.jpg');">
+                    </div>
+                    <div class="thumb" 
+                         onclick="switchImage(this, 'tree_near.jpg')" 
+                         data-label="近景·枝干" 
+                         style="background-image: url('tree_near.jpg');">
+                    </div>
+                    <div class="thumb" 
+                         onclick="switchImage(this, 'tree_leaf.jpg')" 
+                         data-label="特写·叶子" 
+                         style="background-image: url('tree_leaf.jpg');">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 2. 任务引导 & 范文展示 (Tab 切换版) -->
+            <div class="guide-card">
+                <!-- Tab 切换按钮 -->
+                <div class="guide-tabs">
+                    <div class="tab-item active" onclick="switchGuideTab(this, 'model')">📝 范文案例</div>
+                    <div class="tab-item" onclick="switchGuideTab(this, 'guide')">🧭 写作导航</div>
+                </div>
+
+                <!-- 内容区域 A：范文案例 (默认显示) -->
+                <div id="tabContentModel" class="tab-content active">
+                    <div class="xhs-card">
+                        <div class="xhs-title">绝了！学校后山居然藏着一片莫奈花园？🌸</div>
+                        <div class="xhs-body">
+                            家人们，谁懂啊！今天路过学校后山，误入仙境！这里的荷花开得太疯了！
+                            <br><br>
+                            <span class="highlight-text">远远望去，像一把把粉色的大伞撑在水面上。</span>
+                            <br><br>
+                            <span class="highlight-text">凑近一看，荷叶上还滚着水珠，仿佛是刚睡醒的精灵在眨眼睛✨。</span>
+                        </div>
+                        <div class="xhs-footer">
+                            <span>❤️ 1.2w</span>
+                            <span>⭐ 5602</span>
+                            <span>💬 899</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 内容区域 B：写作导航 (流程图) -->
+                <div id="tabContentGuide" class="tab-content">
+                    <div style="font-size: 20px; font-weight: bold; margin-bottom: 20px; color:#b7791f; text-align:center;">📍 观察与写作顺序</div>
+                    <div class="flow-steps">
+                        <div class="step-box highlight">👀 远看</div>
+                        <div class="step-arrow">➡</div>
+                        <div class="step-box highlight">🔍 近看</div>
+                    </div>
+                    <div class="flow-steps">
+                        <div class="step-box">🌳 整体样子</div>
+                        <div class="step-arrow">➡</div>
+                        <div class="step-box">🍃 枝叶细节</div>
+                    </div>
+                    <div class="small-tip">
+                        💡 提示：先用一句话概括树的大，<br>再具体描写枝干和叶子的生命力。
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 右侧：编辑区 -->
+        <main class="right-panel">
+            <div class="editor-header">📝 我的观察笔记</div>
+            <div class="text-area-wrapper">
+                <textarea id="noteInput" placeholder="我们的船渐渐逼近榕树了。我有机会看清它的真面目。&#10;真是一株大树，枝干的数目不可计数……"></textarea>
+            </div>
+            <div class="editor-toolbar">
+                <div class="tool-btn" id="micBtn" onclick="toggleSpeech()"><span>🎤</span> 语音输入</div>
+                
+                <!-- 重点修改：拆分为两个独立的按钮 -->
+                <div class="tool-btn btn-vocab" onclick="openModal('vocab')">✨ 好词积累</div>
+                <div class="tool-btn btn-sent" onclick="openModal('sentence')">📝 佳句模板</div>
+                
+                <div style="flex:1"></div>
+                <div style="font-size:16px; color:#999; font-weight:bold;" id="wordCount">0 字</div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- 锦囊弹窗 -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">✨ 词汇宝库</span>
+            <span class="close-icon" onclick="closeModal()">×</span>
+        </div>
+        <div id="modalContent"></div>
+    </div>
+</div>
+
+<!-- 成功页 -->
+<div class="success-overlay" id="successPage">
+    <div class="badge">🏆</div>
+    <h1 style="font-size:40px; margin-bottom:10px;">发布成功！</h1>
+    <p style="font-size:24px; color:#666;">获得“小小观察家”称号</p>
+    <div class="comment-wall">
+        <div style="font-weight:bold; font-size:20px; margin-bottom:20px; color:#555;">精选评论</div>
+        <div id="commentList"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:40px; font-size:24px;" onclick="resetApp()">再写一篇</button>
+    <canvas id="fireworks" style="position:absolute;top:0;left:0;pointer-events:none;"></canvas>
+</div>
+
+<div class="toast" id="toast">提示消息</div>
+
+<script>
+    // --- 1. 图片切换逻辑 ---
+    const mainImg = document.getElementById('mainImage');
+    mainImg.style.backgroundImage = "url('tree_far.jpg')"; 
+
+    function switchImage(el, imageUrl) {
+        document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        const mainBox = document.getElementById('mainImage');
+        mainBox.style.backgroundImage = `url('${imageUrl}')`;
+        playSound('click');
+    }
+
+    // --- 2. Tab 切换 logic ---
+    function switchGuideTab(btn, targetId) {
+        playSound('click');
+        document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        if (targetId === 'model') {
+            document.getElementById('tabContentModel').classList.add('active');
+        } else {
+            document.getElementById('tabContentGuide').classList.add('active');
+        }
+    }
+
+    // --- 3. 锦囊逻辑 (拆分为独立功能) ---
+    const vocabData = ["独木成林", "不可计数", "生机勃勃", "枝繁叶茂", "翠绿", "颤动", "卧在水面", "簇拥"];
+    const sentenceData = [
+        { title: "🔭 由远及近·空间顺序", text: "远看，大榕树像……；走近一看，原来……" },
+        { title: "🌳 整体到局部·逻辑顺序", text: "这真是一棵……的榕树！你看那枝干……，再看那叶子……" },
+        { title: "🍃 静态描写·细节特写", text: "那么多……，一簇堆在另一簇上面，不留一点儿……" }
+    ];
+
+    function openModal(type) {
+        playSound('click');
+        const overlay = document.getElementById('modalOverlay');
+        const title = document.getElementById('modalTitle');
+        const content = document.getElementById('modalContent');
+        overlay.classList.add('active');
+        content.innerHTML = '';
+
+        if (type === 'vocab') {
+            title.textContent = "✨ 词汇宝库 (点击插入)";
+            const box = document.createElement('div');
+            box.className = 'tag-cloud';
+            vocabData.forEach(word => {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.textContent = word;
+                tag.onclick = () => { insertText(word); closeModal(); };
+                box.appendChild(tag);
+            });
+            content.appendChild(box);
+        } else if (type === 'sentence') {
+            title.textContent = "📝 空间描写模版 (点击插入)";
+            const list = document.createElement('div');
+            list.className = 'sentence-list';
+            sentenceData.forEach(item => {
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'sentence-group-title';
+                groupTitle.textContent = item.title;
+                list.appendChild(groupTitle);
+
+                const div = document.createElement('div');
+                div.className = 'sentence';
+                div.textContent = item.text;
+                div.onclick = () => { insertText(item.text); closeModal(); };
+                list.appendChild(div);
+            });
+            content.appendChild(list);
+        }
+    }
+
+    // --- 4. 通用逻辑 ---
+    const input = document.getElementById('noteInput');
+    input.addEventListener('input', () => {
+        document.getElementById('wordCount').textContent = input.value.length + " 字";
+    });
+
+    function insertText(txt) {
+        playSound('click');
+        const start = input.selectionStart;
+        input.value = input.value.slice(0, start) + txt + input.value.slice(input.selectionEnd);
+        input.focus();
+        document.getElementById('wordCount').textContent = input.value.length + " 字";
+    }
+
+    function closeModal(e) {
+        if (e && e.target !== document.getElementById('modalOverlay')) return;
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function resetApp() {
+        if(confirm('确定要清空重写吗？')) {
+            location.reload();
+        }
+    }
+
+    // 音效引擎
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = new AudioContext();
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if(type === 'click') {
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime+0.1);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.1);
+            osc.start(); osc.stop(audioCtx.currentTime+0.1);
+        } else if (type==='success') {
+            osc.type='triangle';
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime+0.2);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+1);
+            osc.start(); osc.stop(audioCtx.currentTime+1);
+        }
+    }
+
+    // 语音输入
+    let recognition;
+    const micBtn = document.getElementById('micBtn');
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'zh-CN';
+        recognition.onstart = () => { micBtn.classList.add('mic-active'); showToast('请说话...'); };
+        recognition.onend = () => { micBtn.classList.remove('mic-active'); };
+        recognition.onresult = (e) => insertText(e.results[0][0].transcript);
+    }
+
+    function toggleSpeech() {
+        playSound('click');
+        if(recognition) recognition.start();
+        else alert('浏览器不支持语音');
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg; t.style.opacity = 1;
+        setTimeout(()=>t.style.opacity=0, 2000);
+    }
+
+    // 发布与烟花
+    function handlePublish() {
+        playSound('click');
+        if(input.value.length < 5) { showToast('字数太少啦，多写点吧！'); return; }
+        
+        playSound('success');
+        document.getElementById('successPage').classList.add('active');
+        
+        const list = document.getElementById('commentList');
+        const comments = [
+            {n:"巴金爷爷", t:"观察得真仔细！这正是我想表达的生命力！", i:"👴"},
+            {n:"语文老师", t:"用词准确，顺序清晰，很棒！", i:"👩‍🏫"},
+            {n:"学习委员", t:"这棵树被你写活了！", i:"🌟"}
+        ];
+        list.innerHTML = '';
+        comments.forEach((c, i) => {
+            setTimeout(() => {
+                const row = document.createElement('div');
+                row.className = 'comment-item';
+                row.innerHTML = `<div style="font-size:30px">${c.i}</div><div><div style="font-weight:bold;font-size:18px;color:#333">${c.n}</div><div style="font-size:20px;color:#666">${c.t}</div></div>`;
+                list.appendChild(row);
+                playSound('click');
+            }, i*800 + 500);
+        });
+        startFireworks();
+    }
+
+    function startFireworks() {
+        const c = document.getElementById('fireworks');
+        const x = c.getContext('2d');
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        let p = [];
+        setInterval(() => {
+            if(p.length < 100) {
+                for(let i=0;i<20;i++) p.push({x:Math.random()*c.width, y:Math.random()*c.height/2, vx:(Math.random()-.5)*10, vy:(Math.random()-.5)*10, l:100, c:`hsl(${Math.random()*360},100%,50%)`});
+            }
+        }, 500);
+        function loop() {
+            x.clearRect(0,0,c.width,c.height);
+            p.forEach((i,k)=>{
+                i.x+=i.vx; i.y+=i.vy; i.vy+=0.1; i.l--;
+                x.globalAlpha=i.l/100; x.fillStyle=i.c;
+                x.beginPath(); x.arc(i.x,i.y,4,0,6.28); x.fill();
+                if(i.l<=0) p.splice(k,1);
+            });
+            requestAnimationFrame(loop);
+        }
+        loop();
+    }
+</script>
+</body>
+</html>
