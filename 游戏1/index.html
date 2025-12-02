@@ -375,11 +375,10 @@
         }
     }
 
-    function goToWritingPage() {window.location.href = "game2.html"; 
-        // 跳转逻辑：确保文件名一致
-        // window.location.href = "game2.html"; 
-        alert("准备跳转到 '写作页'。请确保两个 HTML 文件在同一目录下。");
-    }
+    function goToWritingPage() {
+    // 直接跳转到同一目录下的 writing.html
+    window.location.href = "writing.html";
+}
 
     // 音效 (AudioContext)
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -423,4 +422,5 @@
     init();
 </script>
 </body>
+
 </html>
